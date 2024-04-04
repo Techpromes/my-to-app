@@ -3,6 +3,11 @@ const addTaskButton = document.getElementById('add-task');
 const taskList = document.getElementById('task-list');
 const completedTasks = document.getElementById('completed-tasks');
 
+// Load tasks from local storage when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  loadTasks();
+});
+
 addTaskButton.addEventListener('click', addTask);
 
 function addTask() {
@@ -21,6 +26,10 @@ function addTask() {
     taskItem.appendChild(taskLabel);
     taskItem.appendChild(deleteButton);
     taskList.appendChild(taskItem);
+    
+    // Save tasks to local storage
+    saveTasks();
+    
     taskInput.value = '';
   }
 }
@@ -28,17 +37,33 @@ function addTask() {
 function toggleTaskCompletion() {
   const taskItem = this.parentNode;
   taskItem.classList.toggle('completed');
-  if (taskItem.classList.contains('completed')) {
-    completedTasks.value += `- ${taskItem.querySelector('label').textContent}\n`;
-  } else {
-    const completedTaskText = `- ${taskItem.querySelector('label').textContent}\n`;
-    completedTasks.value = completedTasks.value.replace(completedTaskText, '');
-  }
+  saveTasks();
 }
 
 function deleteTask() {
   const taskItem = this.parentNode;
-  const completedTaskText = `- ${taskItem.querySelector('label').textContent}\n`;
-  completedTasks.value = completedTasks.value.replace(completedTaskText, '');
   taskItem.remove();
+  saveTasks();
+}
+
+function saveTasks() {
+  localStorage.setItem('tasks', taskList.innerHTML);
+}
+
+function loadTasks() {
+  const tasks = localStorage.getItem('tasks');
+  if (tasks) {
+    taskList.innerHTML = tasks;
+    
+    // Reattach event listeners to checkboxes and delete buttons
+    const checkboxes = taskList.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('change', toggleTaskCompletion);
+    });
+    
+    const deleteButtons = taskList.querySelectorAll('button');
+    deleteButtons.forEach(function(button) {
+      button.addEventListener('click', deleteTask);
+    });
+  }
 }
